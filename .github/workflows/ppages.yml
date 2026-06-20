@@ -1,0 +1,49 @@
+name: Publicar Dominó PWA
+
+on:
+  push:
+    branches: [principal]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Gerar site
+        run: pnpm --filter @workspace/domino build
+        env:
+          BASE_PATH: /domino-nordeste-pwa/
+
+      - name: Preparar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Enviar site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/domino/dist/public
+
+      - name: Publicar
+        uses: actions/deploy-pages@v4
