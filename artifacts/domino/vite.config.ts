@@ -6,7 +6,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 
 // GitHub Pages
-const basePath = "/domino-nordeste/";
+const basePath = "/domino-nordeste26/";
 
 // PORT is only needed for dev/preview servers
 const rawPort = process.env.PORT;
