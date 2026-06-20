@@ -30,7 +30,7 @@ jobs:
           cache: pnpm
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Gerar site
         run: pnpm --filter @workspace/domino build
