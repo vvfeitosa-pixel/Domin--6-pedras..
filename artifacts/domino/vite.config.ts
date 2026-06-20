@@ -5,35 +5,48 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 
-// PORT is only needed for dev/preview servers, not for `vite build`
+// GitHub Pages
+const basePath = "/Domin--6-pedras./";
+
+// PORT is only needed for dev/preview servers
 const rawPort = process.env.PORT;
 const port = rawPort ? Number(rawPort) : 3000;
 
-// BASE_PATH defaults to "/" for production builds
-const basePath = process.env.BASE_PATH ?? "/";
-
-// API server runs on port 8080 (configured in .replit)
+// API server runs on port 8080
 const API_SERVER_PORT = 8080;
 
 export default defineConfig({
   base: basePath,
+
   plugins: [
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
+
+      includeAssets: [
+        "favicon.svg",
+        "apple-touch-icon.png",
+        "pwa-192x192.png",
+        "pwa-512x512.png",
+      ],
+
       manifest: {
         name: "Dominó de 6 Pedras",
         short_name: "Dominó 6",
         description: "Jogo de dominó nordestino com salas multiplayer",
+
         theme_color: "#C0450A",
         background_color: "#C0450A",
+
         display: "standalone",
         orientation: "portrait",
+
         scope: basePath,
         start_url: basePath,
+
         icons: [
           {
             src: "pwa-192x192.png",
@@ -53,26 +66,42 @@ export default defineConfig({
           },
         ],
       },
+
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: null,
+
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
-            options: { cacheName: "google-fonts-cache", expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: "CacheFirst",
-            options: { cacheName: "gstatic-fonts-cache", expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+            options: {
+              cacheName: "gstatic-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
           },
         ],
       },
+
       devOptions: {
         enabled: false,
       },
     }),
+
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
@@ -87,26 +116,39 @@ export default defineConfig({
         ]
       : []),
   ],
+
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "..",
+        "..",
+        "attached_assets",
+      ),
     },
+
     dedupe: ["react", "react-dom"],
   },
+
   root: path.resolve(import.meta.dirname),
+
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
+
   server: {
     port,
     strictPort: true,
     host: "0.0.0.0",
+
     allowedHosts: true,
+
     fs: {
       strict: true,
     },
+
     proxy: {
       "/socket.io": {
         target: `http://localhost:${API_SERVER_PORT}`,
@@ -115,6 +157,7 @@ export default defineConfig({
       },
     },
   },
+
   preview: {
     port,
     host: "0.0.0.0",
