@@ -1,0 +1,123 @@
+No dominó pernambucano (dominó de 6 pedras com dorme), muito jogado em Recife e no interior, normalmente joga-se em dupla, com 6 pedras para cada jogador e 4 pedras no “dorme” (fora do jogo). A contagem mais tradicional é até 6 pontos.  
+
+Pontuações
+
+Tipo de batida	Significado	Pontos
+Batida simples	Acabar as pedras em apenas uma ponta do jogo	1 ponto
+Carroçada	Bater com uma carroça (dupla) em uma única ponta	2 pontos
+Lá e Lô	Bater com uma pedra simples fechando as duas pontas ao mesmo tempo	3 pontos
+Cruzada (Quadrada)	Bater com uma carroça fechando as duas pontas simultaneamente	6 pontos
+Jogo trancado	Menor soma de pedras na mão vence	1 ponto
+
+⸻
+
+O que é cada jogada?
+
+Carroçada
+
+É quando a última pedra jogada é uma carroça (dupla) e encerra a partida.
+
+Exemplo:
+
+Ponta esquerda = 5
+Ponta direita = 2
+
+Você termina jogando:
+
+5-5
+
+e fica sem pedras.
+
+➡️ Vale 2 pontos.  
+
+⸻
+
+Lá e Lô
+
+É a jogada mais famosa do Nordeste.
+
+Ocorre quando as duas pontas abertas possuem o mesmo número e sua última pedra encaixa simultaneamente nas duas extremidades.
+
+Exemplo:
+
+Pontas abertas:
+
+4 ………. 4
+
+Você possui:
+
+4-4? Não.
+
+Você possui:
+
+4-0
+
+Consegue fechar as duas pontas com a mesma pedra.
+
+➡️ Vale 3 pontos.  
+
+⸻
+
+Cruzada (Quadrada)
+
+Também chamada de:
+
+* Cruzada
+* Quadrada
+* Carroça Cruzada
+
+É um Lá e Lô usando uma carroça.
+
+Exemplo:
+
+Pontas abertas:
+
+3 ………. 3
+
+Sua última pedra:
+
+3-3
+
+Você fecha as duas pontas de uma vez e acaba a mão.
+
+➡️ Vale 6 pontos.  
+
+⸻
+
+Menor Pedra
+
+Quando o jogo “tranca” e ninguém consegue jogar:
+
+1. Soma-se o valor das pedras restantes de cada dupla.
+2. Quem tiver a menor soma ganha.
+
+Exemplo:
+
+Dupla A:
+
+* 6-4 = 10
+* 3-1 = 4
+
+Total = 14
+
+Dupla B:
+
+* 6-6 = 12
+* 5-4 = 9
+
+Total = 21
+
+➡️ A Dupla A vence a mão e marca 1 ponto.  
+
+⸻
+
+Regras tradicionais que muita gente usa em Pernambuco
+
+* 6 pedras para cada jogador.
+* 4 pedras ficam no dorme.
+* Quem tem a maior carroça sai primeiro (normalmente a 6-6).
+* Se alguém receber 4 carroças, pode pedir nova distribuição.
+* A partida normalmente vai até 6 pontos.
+* Ganha quem atingir os 6 pontos primeiro.  
+
+Uma curiosidade: em muitas mesas de Recife, uma cruzada (6 pontos) encerra a partida imediatamente, pois já atinge a pontuação necessária para vencer o jogo inteiro de uma só vez. Isso varia de mesa para mesa, mas é uma tradição bastante comum.

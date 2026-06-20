@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Dominó Nordestino"
+version = "1.0.0"
+id = "artifacts/domino"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22110
+
+[services.development]
+run = "pnpm --filter @workspace/domino run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/domino", "run", "build" ]
+publicDir = "artifacts/domino/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22110"
+BASE_PATH = "/"

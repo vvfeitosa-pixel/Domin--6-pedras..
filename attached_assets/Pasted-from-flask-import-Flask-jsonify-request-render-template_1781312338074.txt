@@ -1,0 +1,476 @@
+from flask import Flask, jsonify, request, render_template_string
+import random
+
+app = Flask(__name__)
+
+
+class JogoDomino:
+    def __init__(self):
+        self.nova_partida()
+
+    def nova_partida(self):
+        self.pecas = [(x, y) for x in range(7) for y in range(x, 7)]
+        random.shuffle(self.pecas)
+
+        self.jogadores = {
+            0: {"nome": "Você", "mao": [], "tipo": "humano"},
+            1: {"nome": "CPU 1", "mao": [], "tipo": "cpu"},
+            2: {"nome": "CPU 2", "mao": [], "tipo": "cpu"},
+            3: {"nome": "CPU 3", "mao": [], "tipo": "cpu"},
+        }
+
+        self.dorme = self.pecas[24:]
+        self.pecas_no_estoque = self.pecas[:24]
+
+        for i in range(4):
+            self.jogadores[i]["mao"] = self.pecas_no_estoque[i * 6:(i + 1) * 6]
+
+        self.board = []
+        self.turno_atual = self.determinar_primeiro_jogador()
+        self.mensagem = f"{self.jogadores[self.turno_atual]['nome']} começa a partida."
+        self.fim = False
+        self.vencedor = None
+        self.passes_seguidos = 0
+
+        if self.turno_atual != 0:
+            self.jogar_cpus_ate_humano()
+
+    def determinar_primeiro_jogador(self):
+        melhor_jogador = 0
+        melhor_soma = -1
+
+        for uid, data in self.jogadores.items():
+            if (6, 6) in data["mao"]:
+                return uid
+
+            for p in data["mao"]:
+                soma = p[0] + p[1]
+                if soma > melhor_soma:
+                    melhor_soma = soma
+                    melhor_jogador = uid
+
+        return melhor_jogador
+
+    def pontas(self):
+        if not self.board:
+            return None, None
+        return self.board[0][0], self.board[-1][1]
+
+    def validar_jogada(self, peca, lado):
+        if not self.board:
+            return True
+
+        esquerda, direita = self.pontas()
+
+        if lado == "E":
+            return peca[0] == esquerda or peca[1] == esquerda
+
+        if lado == "D":
+            return peca[0] == direita or peca[1] == direita
+
+        return False
+
+    def realizar_jogada(self, uid, index_peca, lado):
+        mao = self.jogadores[uid]["mao"]
+
+        if index_peca < 0 or index_peca >= len(mao):
+            return False, "Índice inválido."
+
+        peca = mao[index_peca]
+
+        if not self.validar_jogada(peca, lado):
+            return False, "Essa peça não encaixa nesse lado."
+
+        mao.pop(index_peca)
+
+        if not self.board:
+            self.board.append(peca)
+        else:
+            esquerda, direita = self.pontas()
+
+            if lado == "E":
+                if peca[1] == esquerda:
+                    self.board.insert(0, peca)
+                else:
+                    self.board.insert(0, (peca[1], peca[0]))
+
+            elif lado == "D":
+                if peca[0] == direita:
+                    self.board.append(peca)
+                else:
+                    self.board.append((peca[1], peca[0]))
+
+        self.passes_seguidos = 0
+        self.mensagem = f"{self.jogadores[uid]['nome']} jogou {peca}."
+
+        if len(mao) == 0:
+            self.fim = True
+            self.vencedor = self.jogadores[uid]["nome"]
+            self.mensagem = f"{self.vencedor} venceu a partida!"
+
+        return True, self.mensagem
+
+    def jogador_tem_jogada(self, uid):
+        mao = self.jogadores[uid]["mao"]
+
+        for p in mao:
+            if self.validar_jogada(p, "E") or self.validar_jogada(p, "D"):
+                return True
+
+        return False
+
+    def passar(self, uid):
+        self.passes_seguidos += 1
+        self.mensagem = f"{self.jogadores[uid]['nome']} passou."
+
+        if self.passes_seguidos >= 4:
+            self.fim = True
+            vencedor = min(
+                self.jogadores.items(),
+                key=lambda item: sum(a + b for a, b in item[1]["mao"])
+            )
+            self.vencedor = vencedor[1]["nome"]
+            self.mensagem = f"Jogo bloqueado! Vencedor: {self.vencedor}"
+
+    def proximo_turno(self):
+        self.turno_atual = (self.turno_atual + 1) % 4
+
+    def vez_cpu(self, uid):
+        mao = self.jogadores[uid]["mao"]
+
+        for i, p in enumerate(mao):
+            if self.validar_jogada(p, "E"):
+                self.realizar_jogada(uid, i, "E")
+                return
+
+            if self.validar_jogada(p, "D"):
+                self.realizar_jogada(uid, i, "D")
+                return
+
+        self.passar(uid)
+
+    def jogar_cpus_ate_humano(self):
+        while not self.fim and self.turno_atual != 0:
+            self.vez_cpu(self.turno_atual)
+            if not self.fim:
+                self.proximo_turno()
+
+    def estado(self):
+        esquerda, direita = self.pontas()
+
+        return {
+            "mao": self.jogadores[0]["mao"],
+            "board": self.board,
+            "turno": self.jogadores[self.turno_atual]["nome"],
+            "turno_id": self.turno_atual,
+            "mensagem": self.mensagem,
+            "fim": self.fim,
+            "vencedor": self.vencedor,
+            "esquerda": esquerda,
+            "direita": direita,
+            "qtd_cpu": {
+                "CPU 1": len(self.jogadores[1]["mao"]),
+                "CPU 2": len(self.jogadores[2]["mao"]),
+                "CPU 3": len(self.jogadores[3]["mao"]),
+            },
+        }
+
+
+jogo = JogoDomino()
+
+
+HTML = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dominó Pernambucano</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #123;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 15px;
+        }
+
+        .mesa {
+            background: #0b7a3b;
+            margin: 20px auto;
+            width: 90%;
+            min-height: 280px;
+            border-radius: 25px;
+            border: 8px solid #5a3518;
+            padding: 20px;
+            box-shadow: 0 0 20px #000;
+        }
+
+        .board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-height: 120px;
+        }
+
+        .peca {
+            background: #f5f1df;
+            color: #111;
+            border: 3px solid #222;
+            border-radius: 8px;
+            width: 58px;
+            height: 95px;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .peca.selecionada {
+            background: #ffd54f;
+            transform: translateY(-10px);
+        }
+
+        .linha {
+            width: 70%;
+            height: 3px;
+            background: #222;
+        }
+
+        .mao {
+            margin-top: 20px;
+        }
+
+        button {
+            background: #ffcc00;
+            border: none;
+            padding: 12px 18px;
+            margin: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #ffe066;
+        }
+
+        .info {
+            font-size: 18px;
+            margin: 10px;
+        }
+
+        .cpu {
+            margin: 10px;
+            font-size: 16px;
+        }
+
+        .mensagem {
+            background: #222;
+            padding: 12px;
+            margin: 10px auto;
+            width: 85%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dominó Pernambucano</h1>
+
+    <div class="info">
+        Turno: <strong id="turno"></strong>
+    </div>
+
+    <div class="cpu" id="cpu"></div>
+
+    <div class="mensagem" id="mensagem"></div>
+
+    <div class="mesa">
+        <h2>Mesa</h2>
+        <div class="board" id="board"></div>
+    </div>
+
+    <div>
+        <button onclick="jogar('E')">Jogar na Esquerda</button>
+        <button onclick="jogar('D')">Jogar na Direita</button>
+        <button onclick="passar()">Passar</button>
+        <button onclick="novaPartida()">Nova Partida</button>
+    </div>
+
+    <div class="mao">
+        <h2>Sua mão</h2>
+        <div id="mao"></div>
+    </div>
+
+<script>
+    let selecionada = null;
+
+    function desenharPeca(peca, index, clicavel) {
+        const div = document.createElement("div");
+        div.className = "peca";
+
+        if (clicavel) {
+            div.onclick = () => {
+                selecionada = index;
+                atualizar();
+            };
+
+            if (selecionada === index) {
+                div.classList.add("selecionada");
+            }
+        }
+
+        div.innerHTML = `
+            <div>${peca[0]}</div>
+            <div class="linha"></div>
+            <div>${peca[1]}</div>
+        `;
+
+        return div;
+    }
+
+    async function atualizar() {
+        const resp = await fetch("/api/estado");
+        const estado = await resp.json();
+
+        document.getElementById("turno").innerText = estado.turno;
+        document.getElementById("mensagem").innerText = estado.mensagem;
+
+        document.getElementById("cpu").innerText =
+            `CPU 1: ${estado.qtd_cpu["CPU 1"]} peças | ` +
+            `CPU 2: ${estado.qtd_cpu["CPU 2"]} peças | ` +
+            `CPU 3: ${estado.qtd_cpu["CPU 3"]} peças`;
+
+        const board = document.getElementById("board");
+        board.innerHTML = "";
+
+        if (estado.board.length === 0) {
+            board.innerHTML = "<h3>Mesa vazia</h3>";
+        } else {
+            estado.board.forEach((peca) => {
+                board.appendChild(desenharPeca(peca, null, false));
+            });
+        }
+
+        const mao = document.getElementById("mao");
+        mao.innerHTML = "";
+
+        estado.mao.forEach((peca, index) => {
+            mao.appendChild(desenharPeca(peca, index, true));
+        });
+
+        if (estado.fim) {
+            alert(estado.mensagem);
+        }
+    }
+
+    async function jogar(lado) {
+        if (selecionada === null) {
+            alert("Selecione uma peça da sua mão primeiro.");
+            return;
+        }
+
+        const resp = await fetch("/api/jogar", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                index: selecionada,
+                lado: lado
+            })
+        });
+
+        const dados = await resp.json();
+
+        if (!dados.ok) {
+            alert(dados.mensagem);
+        }
+
+        selecionada = null;
+        atualizar();
+    }
+
+    async function passar() {
+        await fetch("/api/passar", {method: "POST"});
+        selecionada = null;
+        atualizar();
+    }
+
+    async function novaPartida() {
+        await fetch("/api/nova", {method: "POST"});
+        selecionada = null;
+        atualizar();
+    }
+
+    atualizar();
+</script>
+
+</body>
+</html>
+"""
+
+
+@app.route("/")
+def index():
+    return render_template_string(HTML)
+
+
+@app.route("/api/estado")
+def api_estado():
+    return jsonify(jogo.estado())
+
+
+@app.route("/api/jogar", methods=["POST"])
+def api_jogar():
+    dados = request.json
+    index = int(dados["index"])
+    lado = dados["lado"]
+
+    if jogo.fim:
+        return jsonify({"ok": False, "mensagem": "A partida terminou. Clique em Nova Partida."})
+
+    if jogo.turno_atual != 0:
+        return jsonify({"ok": False, "mensagem": "Ainda não é sua vez."})
+
+    ok, mensagem = jogo.realizar_jogada(0, index, lado)
+
+    if ok and not jogo.fim:
+        jogo.proximo_turno()
+        jogo.jogar_cpus_ate_humano()
+
+    return jsonify({"ok": ok, "mensagem": mensagem})
+
+
+@app.route("/api/passar", methods=["POST"])
+def api_passar():
+    if jogo.fim:
+        return jsonify({"ok": False})
+
+    if jogo.turno_atual == 0:
+        jogo.passar(0)
+
+        if not jogo.fim:
+            jogo.proximo_turno()
+            jogo.jogar_cpus_ate_humano()
+
+    return jsonify({"ok": True})
+
+
+@app.route("/api/nova", methods=["POST"])
+def api_nova():
+    jogo.nova_partida()
+    return jsonify({"ok": True})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3000)
