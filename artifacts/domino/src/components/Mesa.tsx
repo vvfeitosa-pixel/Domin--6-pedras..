@@ -31,22 +31,27 @@ export function FaceDownPeca({ className }: { className?: string }) {
 interface PieceLayout {
   x: number;
   y: number;
+  isVertical: boolean;
   reversed: boolean;
 }
 
-const PW = 42;
-const PH = 84;
+const PW = 84;
+const PH = 42;
 
 function computeSnakeLayout(
   count: number,
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
-  const available = containerPx - padding * 2;
-  const runsPerRow = Math.max(4, Math.floor(available / PW));
+  const available = containerPx - padding * 2 - 2 * PH;
+  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  const layoutW = runsPerRow * PW;
-  const rowH = Math.round(PH * 0.72);
+  const horizStartX = PH;
+  const rightCornerX = horizStartX + runsPerRow * PW;
+  const leftCornerX = 0;
+  const layoutW = rightCornerX + PH;
+
+  const rowH = Math.round(PH * 1.5);
 
   const positions: PieceLayout[] = [];
   let direction = 1;
@@ -54,17 +59,27 @@ function computeSnakeLayout(
   let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
+    if (posInRun < runsPerRow) {
+      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
 
-    positions.push({
-      x: col * PW,
-      y: rowY,
-      reversed: direction === -1,
-    });
+      positions.push({
+        x: horizStartX + col * PW,
+        y: rowY,
+        isVertical: false,
+        reversed: direction === -1,
+      });
 
-    posInRun++;
+      posInRun++;
+    } else {
+      const x = direction === 1 ? rightCornerX : leftCornerX;
 
-    if (posInRun >= runsPerRow) {
+      positions.push({
+        x,
+        y: rowY,
+        isVertical: true,
+        reversed: false,
+      });
+
       rowY += rowH;
       direction *= -1;
       posInRun = 0;
@@ -74,14 +89,21 @@ function computeSnakeLayout(
   return { positions, layoutW, layoutH: rowY + PH };
 }
 
-function renderPiece(peca: Peca, reversed: boolean, highlight: boolean) {
+function renderPiece(
+  peca: Peca,
+  isVertical: boolean,
+  reversed: boolean,
+  highlight: boolean
+) {
+  const w = isVertical ? PH : PW;
+  const h = isVertical ? PW : PH;
   const displayPeca: Peca = reversed ? [peca[1], peca[0]] : peca;
 
   return (
     <div
       style={{
-        width: PW,
-        height: PH,
+        width: w,
+        height: h,
         overflow: "visible",
         flexShrink: 0,
         borderRadius: 5,
@@ -98,7 +120,7 @@ function renderPiece(peca: Peca, reversed: boolean, highlight: boolean) {
     >
       <PecaDomino
         peca={displayPeca}
-        orientation="vertical"
+        orientation={isVertical ? "vertical" : "horizontal"}
         className={`!w-full !h-full !rounded !shadow-none${
           highlight ? " brightness-110 saturate-[1.1]" : ""
         }`}
@@ -201,7 +223,12 @@ export function Mesa({
                     zIndex: isHighlighted ? 2 : 1,
                   }}
                 >
-                  {renderPiece(peca, layout.reversed, isHighlighted)}
+                  {renderPiece(
+                    peca,
+                    layout.isVertical,
+                    layout.reversed,
+                    isHighlighted
+                  )}
                 </div>
               );
             })}
