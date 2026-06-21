@@ -64,7 +64,7 @@ function computeSnakeLayout(
       positions.push({
         x: horizStartX + col * PW,
         y: rowY,
-        isVertical: false,
+        isVertical: true,
         reversed: direction === -1,
       });
       posInRun++;
