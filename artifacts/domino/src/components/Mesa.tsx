@@ -44,14 +44,15 @@ function computeSnakeLayout(
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
 
-  const verticalPieceW = PH;
-  const verticalPieceH = PW;
+  const verticalW = PH;
+  const verticalH = PW;
 
   const available = containerPx - padding * 2;
-  const piecesPerRow = Math.max(2, Math.floor(available / verticalPieceW));
 
-  const layoutW = piecesPerRow * verticalPieceW;
-  const rowH = verticalPieceH + 8;
+  const piecesPerRow = Math.max(3, Math.floor(available / verticalW));
+
+  const layoutW = piecesPerRow * verticalW;
+  const rowH = verticalH * 0.72;
 
   const positions: PieceLayout[] = [];
 
@@ -63,7 +64,7 @@ function computeSnakeLayout(
     const visualCol = direction === 1 ? col : piecesPerRow - 1 - col;
 
     positions.push({
-      x: visualCol * verticalPieceW,
+      x: visualCol * verticalW,
       y: row * rowH,
       isVertical: true,
       reversed: direction === -1,
@@ -72,14 +73,14 @@ function computeSnakeLayout(
     col++;
 
     if (col >= piecesPerRow) {
-      col = 0;
       row++;
+      col = 0;
       direction *= -1;
     }
   }
 
   const totalRows = Math.max(1, Math.ceil(count / piecesPerRow));
-  const layoutH = totalRows * rowH;
+  const layoutH = totalRows * rowH + verticalH * 0.28;
 
   return { positions, layoutW, layoutH };
 }
