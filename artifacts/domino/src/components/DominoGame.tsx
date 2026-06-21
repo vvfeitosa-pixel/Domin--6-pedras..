@@ -372,7 +372,7 @@ export function DominoGame({ onGameOver, adsRemoved = false }: DominoGameProps) 
       )}
 
       {/* Mesa */}
-      <div className="flex-1 flex flex-col items-center justify-center px-2 z-10 min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-start px-2 z-10 min-h-0 pt-2">
         <Mesa
           board={estado.board}
           dragActive={dragging !== null}
