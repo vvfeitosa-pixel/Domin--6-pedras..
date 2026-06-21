@@ -43,44 +43,50 @@ function computeSnakeLayout(
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
+  const available = containerPx - padding * 2 - 2 * PH;
+  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  const verticalW = PH;
-  const verticalH = PW;
+  const horizStartX = PH;
+  const rightCornerX = horizStartX + runsPerRow * PW;
+  const leftCornerX = 0;
+  const layoutW = rightCornerX + PH;
 
-  const available = containerPx - padding * 2;
-
-  const piecesPerColumn = Math.max(2, Math.floor(available / verticalH));
-
-  const colW = verticalW * 1.15;
-  const layoutW = Math.ceil(count / piecesPerColumn) * colW;
-  const layoutH = piecesPerColumn * verticalH;
+  const rowH = Math.round(PH * 1.5);
 
   const positions: PieceLayout[] = [];
-
-  let col = 0;
-  let row = 0;
   let direction = 1;
+  let posInRun = 0;
+  let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    const visualRow = direction === 1 ? row : piecesPerColumn - 1 - row;
+    if (posInRun < runsPerRow) {
+      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
 
-    positions.push({
-      x: col * colW,
-      y: visualRow * verticalH,
-      isVertical: true,
-      reversed: direction === -1,
-    });
+      positions.push({
+        x: horizStartX + col * PW,
+        y: rowY,
+        isVertical: false,
+        reversed: direction === -1,
+      });
 
-    row++;
+      posInRun++;
+    } else {
+      const x = direction === 1 ? rightCornerX : leftCornerX;
 
-    if (row >= piecesPerColumn) {
-      row = 0;
-      col++;
+      positions.push({
+        x,
+        y: rowY,
+        isVertical: true,
+        reversed: false,
+      });
+
+      rowY += rowH;
       direction *= -1;
+      posInRun = 0;
     }
   }
 
-  return { positions, layoutW, layoutH };
+  return { positions, layoutW, layoutH: rowY + PH };
 }
 
 function renderPiece(
