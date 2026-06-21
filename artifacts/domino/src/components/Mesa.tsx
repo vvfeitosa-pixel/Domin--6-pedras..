@@ -77,7 +77,7 @@ function computeSnakeLayout(
         x,
         y: rowY,
         isVertical: false,
-        reversed: true,
+        reversed: false,
       });
 
       rowY += rowH;
