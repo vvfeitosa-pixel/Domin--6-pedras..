@@ -43,52 +43,53 @@ function computeSnakeLayout(
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
-  const available = containerPx - padding * 2 - 2 * PH;
-  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  const horizStartX = PH;
-  const rightCornerX = horizStartX + runsPerRow * PW;
-  const leftCornerX = 0;
-  const layoutW = rightCornerX + PH;
+  const horizontalW = 84;
+  const horizontalH = 42;
+  const verticalW = 42;
+  const verticalH = 84;
 
-  const rowH = Math.round(PH * 1.5);
+  const available = containerPx - padding * 2;
+
+  const piecesPerColumn = Math.max(4, Math.floor(available / 58));
+
+  const colGap = 78;
+  const rowGap = 38;
 
   const positions: PieceLayout[] = [];
+
+  let col = 0;
+  let row = 0;
   let direction = 1;
-  let posInRun = 0;
-  let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    if (posInRun < runsPerRow) {
-      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
+    const isTurnPiece = row === 0 || row === piecesPerColumn - 1;
 
-      positions.push({
-        x: horizStartX + col * PW,
-        y: rowY,
-        isVertical: false,
-        reversed: direction === -1,
-      });
+    const visualRow = direction === 1 ? row : piecesPerColumn - 1 - row;
 
-      posInRun++;
-    } else {
-      const x = direction === 1 ? rightCornerX : leftCornerX;
+    positions.push({
+      x: col * colGap,
+      y: visualRow * rowGap,
+      isVertical: !isTurnPiece,
+      reversed: direction === -1,
+    });
 
-      positions.push({
-        x,
-        y: rowY,
-        isVertical: true,
-        reversed: false,
-      });
+    row++;
 
-      rowY += rowH;
+    if (row >= piecesPerColumn) {
+      row = 0;
+      col++;
       direction *= -1;
-      posInRun = 0;
     }
   }
 
-  return { positions, layoutW, layoutH: rowY + PH };
-}
+  const totalColumns = Math.ceil(count / piecesPerColumn);
 
+  const layoutW = totalColumns * colGap + horizontalW;
+  const layoutH = piecesPerColumn * rowGap + verticalH;
+
+  return { positions, layoutW, layoutH };
+}
 function renderPiece(
   peca: Peca,
   isVertical: boolean,
