@@ -43,47 +43,57 @@ function computeSnakeLayout(
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
-  const available = containerPx - padding * 2 - 2 * PH;
-  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  const horizStartX = PH;
-  const rightCornerX = horizStartX + runsPerRow * PW;
-  const leftCornerX = 0;
-  const layoutW = rightCornerX + PH;
+  const verticalPieceW = PH;
+  const verticalPieceH = PW;
 
-  const rowH = Math.round(PH * 1.5);
+  const available = containerPx - padding * 2;
+  const piecesPerRow = Math.max(2, Math.floor(available / verticalPieceW));
+
+  const layoutW = piecesPerRow * verticalPieceW;
+  const rowH = verticalPieceH + 8;
 
   const positions: PieceLayout[] = [];
+
+  let row = 0;
+  let col = 0;
   let direction = 1;
-  let posInRun = 0;
-  let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    if (posInRun < runsPerRow) {
-      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
-      positions.push({
-        x: horizStartX + col * PW,
-        y: rowY,
-        isVertical: true,
-        reversed: direction === -1,
-      });
-      posInRun++;
-    } else {
-      const x = direction === 1 ? rightCornerX : leftCornerX;
-      positions.push({ x, y: rowY, isVertical: true, reversed: false });
-      rowY += rowH;
+    const visualCol = direction === 1 ? col : piecesPerRow - 1 - col;
+
+    positions.push({
+      x: visualCol * verticalPieceW,
+      y: row * rowH,
+      isVertical: true,
+      reversed: direction === -1,
+    });
+
+    col++;
+
+    if (col >= piecesPerRow) {
+      col = 0;
+      row++;
       direction *= -1;
-      posInRun = 0;
     }
   }
 
-  return { positions, layoutW, layoutH: rowY + PH };
+  const totalRows = Math.max(1, Math.ceil(count / piecesPerRow));
+  const layoutH = totalRows * rowH;
+
+  return { positions, layoutW, layoutH };
 }
 
-function renderPiece(peca: Peca, isVertical: boolean, reversed: boolean, highlight: boolean) {
+function renderPiece(
+  peca: Peca,
+  isVertical: boolean,
+  reversed: boolean,
+  highlight: boolean
+) {
   const w = isVertical ? PH : PW;
   const h = isVertical ? PW : PH;
   const displayPeca: Peca = reversed ? [peca[1], peca[0]] : peca;
+
   return (
     <div
       style={{
@@ -92,18 +102,23 @@ function renderPiece(peca: Peca, isVertical: boolean, reversed: boolean, highlig
         overflow: "visible",
         flexShrink: 0,
         borderRadius: 5,
-        ...(highlight ? {
-          outline: "2.5px solid #f5b942",
-          outlineOffset: 2,
-          boxShadow: "0 0 0 4px rgba(245,185,66,0.30), 0 0 12px rgba(245,185,66,0.45)",
-          zIndex: 3,
-        } : {}),
+        ...(highlight
+          ? {
+              outline: "2.5px solid #f5b942",
+              outlineOffset: 2,
+              boxShadow:
+                "0 0 0 4px rgba(245,185,66,0.30), 0 0 12px rgba(245,185,66,0.45)",
+              zIndex: 3,
+            }
+          : {}),
       }}
     >
       <PecaDomino
         peca={displayPeca}
         orientation={isVertical ? "vertical" : "horizontal"}
-        className={`!w-full !h-full !rounded !shadow-none${highlight ? " brightness-110 saturate-[1.1]" : ""}`}
+        className={`!w-full !h-full !rounded !shadow-none${
+          highlight ? " brightness-110 saturate-[1.1]" : ""
+        }`}
       />
     </div>
   );
@@ -126,9 +141,12 @@ export function Mesa({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
     setContainerPx(el.clientWidth);
+
     const ro = new ResizeObserver(() => setContainerPx(el.clientWidth));
     ro.observe(el);
+
     return () => ro.disconnect();
   }, []);
 
@@ -145,9 +163,12 @@ export function Mesa({
   const renderedW = layoutW * scale;
   const renderedH = layoutH * scale;
 
-  const lastPlayedIdx = hasBoard && lastPlayedSide
-    ? (lastPlayedSide === "E" ? 0 : board.length - 1)
-    : -1;
+  const lastPlayedIdx =
+    hasBoard && lastPlayedSide
+      ? lastPlayedSide === "E"
+        ? 0
+        : board.length - 1
+      : -1;
 
   return (
     <div
@@ -158,7 +179,10 @@ export function Mesa({
           ? "border-[#f5b942] ring-4 ring-[#f5b942]/60 ring-offset-2 ring-offset-transparent"
           : "border-[#5c3018]"
       }`}
-      style={{ aspectRatio: "1 / 1", width: "min(100%, clamp(200px, 38vh, 380px))" }}
+      style={{
+        aspectRatio: "1 / 1",
+        width: "min(100%, clamp(200px, 38vh, 380px))",
+      }}
     >
       {!hasBoard && (
         <p className="text-white/30 font-serif text-xl rotate-[-5deg] pointer-events-none select-none">
@@ -180,7 +204,9 @@ export function Mesa({
             {board.map((peca, idx) => {
               const layout = positions[idx];
               if (!layout) return null;
+
               const isHighlighted = idx === lastPlayedIdx;
+
               return (
                 <div
                   key={`board-${idx}-${peca[0]}-${peca[1]}`}
@@ -192,7 +218,12 @@ export function Mesa({
                     zIndex: isHighlighted ? 2 : 1,
                   }}
                 >
-                  {renderPiece(peca, layout.isVertical, layout.reversed, isHighlighted)}
+                  {renderPiece(
+                    peca,
+                    layout.isVertical,
+                    layout.reversed,
+                    isHighlighted
+                  )}
                 </div>
               );
             })}
@@ -206,15 +237,21 @@ export function Mesa({
             ref={dropLeftRef}
             className={`absolute left-0 top-0 w-1/2 h-full z-30 flex items-center justify-start pl-3 transition-all duration-150 ${
               dropHover === "E"
-                ? canDropLeft ? "bg-green-500/40" : "bg-red-500/30"
+                ? canDropLeft
+                  ? "bg-green-500/40"
+                  : "bg-red-500/30"
                 : "bg-white/5"
             }`}
           >
-            <div className={`rounded-full p-2 border-2 transition-all ${
-              canDropLeft
-                ? dropHover === "E" ? "bg-green-500 border-green-300 scale-125" : "bg-green-600/70 border-green-400"
-                : "bg-gray-600/50 border-gray-400/50"
-            }`}>
+            <div
+              className={`rounded-full p-2 border-2 transition-all ${
+                canDropLeft
+                  ? dropHover === "E"
+                    ? "bg-green-500 border-green-300 scale-125"
+                    : "bg-green-600/70 border-green-400"
+                  : "bg-gray-600/50 border-gray-400/50"
+              }`}
+            >
               <ArrowLeft className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -223,15 +260,21 @@ export function Mesa({
             ref={dropRightRef}
             className={`absolute right-0 top-0 w-1/2 h-full z-30 flex items-center justify-end pr-3 transition-all duration-150 ${
               dropHover === "D"
-                ? canDropRight ? "bg-green-500/40" : "bg-red-500/30"
+                ? canDropRight
+                  ? "bg-green-500/40"
+                  : "bg-red-500/30"
                 : "bg-white/5"
             }`}
           >
-            <div className={`rounded-full p-2 border-2 transition-all ${
-              canDropRight
-                ? dropHover === "D" ? "bg-green-500 border-green-300 scale-125" : "bg-green-600/70 border-green-400"
-                : "bg-gray-600/50 border-gray-400/50"
-            }`}>
+            <div
+              className={`rounded-full p-2 border-2 transition-all ${
+                canDropRight
+                  ? dropHover === "D"
+                    ? "bg-green-500 border-green-300 scale-125"
+                    : "bg-green-600/70 border-green-400"
+                  : "bg-gray-600/50 border-gray-400/50"
+              }`}
+            >
               <ArrowRight className="w-6 h-6 text-white" />
             </div>
           </div>
