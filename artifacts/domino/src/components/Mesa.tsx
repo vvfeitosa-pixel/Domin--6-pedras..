@@ -54,8 +54,8 @@ function computeSnakeLayout(
   const legPieces = 4;
 
   // Espaçamento compacto para ficar parecido com o modelo enviado
-  const rowStep = 46;
-  const colStep = 83;
+  const rowStep = 84;
+  const colStep = 96;
 
   const topY = 0;
   const bottomY = horizontalH + legPieces * rowStep;
