@@ -53,7 +53,7 @@ function computeSnakeLayout(
   const rowStep = 42;
 
   // Distância entre colunas
-  const colStep = 72;
+  const colStep = 96;
 
   const positions: PieceLayout[] = [];
 
