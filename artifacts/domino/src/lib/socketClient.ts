@@ -2,8 +2,7 @@ import { io, Socket } from "socket.io-client";
 
 let _socket: Socket | null = null;
 
-const SOCKET_SERVER_URL =
-  import.meta.env.VITE_SOCKET_SERVER_URL || window.location.origin;
+const SOCKET_SERVER_URL = "https://domino-nordeste26.onrender.com";
 
 export function getSocket(): Socket {
   if (!_socket) {
@@ -11,6 +10,10 @@ export function getSocket(): Socket {
       path: "/socket.io",
       transports: ["websocket", "polling"],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 20000,
     });
   }
 
@@ -65,4 +68,8 @@ export function loadSession(): StoredSession | null {
 
 export function clearSession(): void {
   localStorage.removeItem("domino_session");
+}
+
+export function isSocketConnected(): boolean {
+  return Boolean(_socket?.connected);
 }
