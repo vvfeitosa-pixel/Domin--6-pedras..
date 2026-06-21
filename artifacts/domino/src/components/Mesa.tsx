@@ -44,53 +44,57 @@ function computeSnakeLayout(
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
 
-  const verticalW = PH; // 42
-  const verticalH = PW; // 84
   const horizontalW = PW; // 84
   const horizontalH = PH; // 42
+  const verticalW = PH;   // 42
 
   const available = containerPx - padding * 2;
 
-  // Quantas peças descem/sobem em cada coluna
-  const piecesPerLeg = Math.max(4, Math.floor((available - horizontalH) / 38));
+  // Quantas peças verticais em cada “perna” da sanfona
+  const legPieces = 4;
 
-  const rowStep = 38;
-  const colStep = 72;
+  // Espaçamento compacto para ficar parecido com o modelo enviado
+  const rowStep = 42;
+  const colStep = 64;
+
+  const topY = 0;
+  const bottomY = horizontalH + legPieces * rowStep;
 
   const positions: PieceLayout[] = [];
 
   for (let i = 0; i < count; i++) {
-    const segmentSize = piecesPerLeg + 1;
-    const segment = Math.floor(i / segmentSize);
-    const indexInSegment = i % segmentSize;
+    const groupSize = legPieces + 1;
+    const group = Math.floor(i / groupSize);
+    const index = i % groupSize;
 
-    const goingDown = segment % 2 === 0;
-    const baseX = segment * colStep;
+    const goingDown = group % 2 === 0;
+    const baseX = group * colStep;
 
-    // Primeira peça de cada coluna é a curva horizontal
-    if (indexInSegment === 0) {
+    if (index === 0) {
+      // Peça horizontal no topo ou na base da curva
       positions.push({
         x: baseX,
-        y: goingDown ? 0 : piecesPerLeg * rowStep,
+        y: goingDown ? topY : bottomY,
         isVertical: false,
         reversed: !goingDown,
       });
     } else {
-      const row = indexInSegment - 1;
-      const visualRow = goingDown ? row : piecesPerLeg - 1 - row;
+      // Peças verticais da coluna
+      const legIndex = index - 1;
+      const visualIndex = goingDown ? legIndex : legPieces - 1 - legIndex;
 
       positions.push({
         x: baseX + horizontalW - verticalW,
-        y: horizontalH + visualRow * rowStep,
+        y: horizontalH + visualIndex * rowStep,
         isVertical: true,
         reversed: !goingDown,
       });
     }
   }
 
-  const totalSegments = Math.ceil(count / (piecesPerLeg + 1));
-  const layoutW = totalSegments * colStep + horizontalW;
-  const layoutH = piecesPerLeg * rowStep + verticalH;
+  const totalGroups = Math.ceil(count / (legPieces + 1));
+  const layoutW = totalGroups * colStep + horizontalW;
+  const layoutH = bottomY + horizontalH;
 
   return { positions, layoutW, layoutH };
 }
