@@ -76,7 +76,7 @@ function computeSnakeLayout(
       positions.push({
         x,
         y: rowY,
-        isVertical: false,
+        isVertical: true,
         reversed: false,
       });
 
