@@ -43,56 +43,52 @@ function computeSnakeLayout(
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
+  const available = containerPx - padding * 2 - 2 * PH;
+  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  const horizontalW = PW; // 84
-  const horizontalH = PH; // 42
-  const verticalW = PH; // 42
-  const verticalH = PW; // 84
+  const horizStartX = PH;
+  const rightCornerX = horizStartX + runsPerRow * PW;
+  const leftCornerX = 0;
+  const layoutW = rightCornerX + PH;
 
-  const legPieces = 4;
-
-  const rowStep = 42; // sem buraco entre as peças
-  const colStep = 88; // distância entre colunas
+  const rowH = Math.round(PH * 1.5);
 
   const positions: PieceLayout[] = [];
+  let direction = 1;
+  let posInRun = 0;
+  let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    const groupSize = legPieces + 1;
-    const group = Math.floor(i / groupSize);
-    const index = i % groupSize;
+    if (posInRun < runsPerRow) {
+      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
 
-    const goingDown = group % 2 === 0;
-    const baseX = group * colStep;
-
-    const bottomY =
-      horizontalH + (legPieces - 1) * rowStep + verticalH - horizontalH;
-
-    if (index === 0) {
       positions.push({
-        x: baseX,
-        y: goingDown ? 0 : bottomY,
+        x: horizStartX + col * PW,
+        y: rowY,
         isVertical: false,
-        reversed: false,
+        reversed: direction === -1,
       });
+
+      posInRun++;
     } else {
-      const legIndex = index - 1;
-      const visualIndex = goingDown ? legIndex : legPieces - 1 - legIndex;
+      const x = direction === 1 ? rightCornerX : leftCornerX;
 
       positions.push({
-        x: baseX + horizontalW - verticalW,
-        y: horizontalH + visualIndex * rowStep,
+        x,
+        y: rowY,
         isVertical: true,
         reversed: false,
       });
+
+      rowY += rowH;
+      direction *= -1;
+      posInRun = 0;
     }
   }
 
-  const totalGroups = Math.ceil(count / (legPieces + 1));
-  const layoutW = totalGroups * colStep + horizontalW;
-  const layoutH = horizontalH + legPieces * rowStep + verticalH;
-
-  return { positions, layoutW, layoutH };
+  return { positions, layoutW, layoutH: rowY + PH };
 }
+
 function renderPiece(
   peca: Peca,
   isVertical: boolean,
