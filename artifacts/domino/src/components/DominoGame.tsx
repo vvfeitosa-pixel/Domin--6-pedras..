@@ -410,18 +410,22 @@ export function DominoGame({ onGameOver, adsRemoved = false }: DominoGameProps) 
         )}
       </div>
 
-      {/* Controls */}
-      <Controles onPassar={handlePassar} podePassar={estado.podePasse} isMyTurn={isMyTurn} />
+    {/* Player Hand - centralizada abaixo da mesa */}
+<div className="w-full flex justify-center items-center mt-3 mb-2 z-20">
+  <div className="w-full max-w-[520px] px-2">
+    <Mao
+      mao={estado.mao}
+      selectedIndex={selectedIndex}
+      draggingIndex={dragging?.index ?? null}
+      onSelect={handleSelectPeca}
+      onDragStart={handleDragStart}
+      isMyTurn={isMyTurn}
+    />
+  </div>
+</div>
 
-      {/* Player Hand */}
-      <Mao
-        mao={estado.mao}
-        selectedIndex={selectedIndex}
-        draggingIndex={dragging?.index ?? null}
-        onSelect={handleSelectPeca}
-        onDragStart={handleDragStart}
-        isMyTurn={isMyTurn}
-      />
+{/* Controls - abaixo das peças */}
+<Controles onPassar={handlePassar} podePassar={estado.podePasse} isMyTurn={isMyTurn} />
 
       {/* Ghost piece */}
       {dragging && dragPeca && (
