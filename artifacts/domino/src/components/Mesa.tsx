@@ -42,57 +42,53 @@ function computeSnakeLayout(
   count: number,
   containerPx: number
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
-  const horizontalW = PW; // 84
-  const horizontalH = PH; // 42
-  const verticalW = PH; // 42
+  const padding = 16;
+  const available = containerPx - padding * 2 - 2 * PH;
+  const runsPerRow = Math.max(2, Math.floor(available / PW));
 
-  // Formato sanfona vertical
-  const legPieces = 4;
+  const horizStartX = PH;
+  const rightCornerX = horizStartX + runsPerRow * PW;
+  const leftCornerX = 0;
+  const layoutW = rightCornerX + PH;
 
-  // Passo de meia peça para dar o visual igual ao modelo
-  const rowStep = 42;
-
-  // Distância entre colunas
-  const colStep = 96;
+  const rowH = Math.round(PH * 1.5);
 
   const positions: PieceLayout[] = [];
+  let direction = 1;
+  let posInRun = 0;
+  let rowY = 0;
 
   for (let i = 0; i < count; i++) {
-    const blockSize = legPieces + 1;
-    const block = Math.floor(i / blockSize);
-    const index = i % blockSize;
+    if (posInRun < runsPerRow) {
+      const col = direction === 1 ? posInRun : runsPerRow - 1 - posInRun;
 
-    const goingDown = block % 2 === 0;
-    const baseX = block * colStep;
-
-    if (index === 0) {
-      // Peças horizontais de ligação no topo/base
       positions.push({
-        x: baseX,
-        y: goingDown ? 0 : horizontalH + legPieces * rowStep,
+        x: horizStartX + col * PW,
+        y: rowY,
         isVertical: false,
-        reversed: false,
+        reversed: direction === -1,
       });
+
+      posInRun++;
     } else {
-      // Peças verticais da coluna
-      const step = index - 1;
-      const visualStep = goingDown ? step : legPieces - 1 - step;
+      const x = direction === 1 ? rightCornerX : leftCornerX;
 
       positions.push({
-        x: baseX + horizontalW - verticalW,
-        y: horizontalH + visualStep * rowStep,
+        x,
+        y: rowY,
         isVertical: true,
         reversed: false,
       });
+
+      rowY += rowH;
+      direction *= -1;
+      posInRun = 0;
     }
   }
 
-  const totalBlocks = Math.ceil(count / (legPieces + 1));
-  const layoutW = totalBlocks * colStep + horizontalW;
-  const layoutH = horizontalH + legPieces * rowStep + horizontalH + 20;
-
-  return { positions, layoutW, layoutH };
+  return { positions, layoutW, layoutH: rowY + PH };
 }
+
 function renderPiece(
   peca: Peca,
   isVertical: boolean,
