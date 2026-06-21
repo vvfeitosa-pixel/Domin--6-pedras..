@@ -89,9 +89,6 @@ function computeSnakeLayout(
   return { positions, layoutW, layoutH };
 }
 
-  return { positions, layoutW, layoutH: rowY + PH };
-}
-
 function renderPiece(
   peca: Peca,
   isVertical: boolean,
