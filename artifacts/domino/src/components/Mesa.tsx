@@ -44,49 +44,53 @@ function computeSnakeLayout(
 ): { positions: PieceLayout[]; layoutW: number; layoutH: number } {
   const padding = 16;
 
-  const horizontalW = 84;
-  const horizontalH = 42;
-  const verticalW = 42;
-  const verticalH = 84;
+  const verticalW = PH; // 42
+  const verticalH = PW; // 84
+  const horizontalW = PW; // 84
+  const horizontalH = PH; // 42
 
   const available = containerPx - padding * 2;
 
-  const piecesPerColumn = Math.max(4, Math.floor(available / 58));
+  // Quantas peças descem/sobem em cada coluna
+  const piecesPerLeg = Math.max(4, Math.floor((available - horizontalH) / 38));
 
-  const colGap = 78;
-  const rowGap = 38;
+  const rowStep = 38;
+  const colStep = 72;
 
   const positions: PieceLayout[] = [];
 
-  let col = 0;
-  let row = 0;
-  let direction = 1;
-
   for (let i = 0; i < count; i++) {
-    const isTurnPiece = row === 0 || row === piecesPerColumn - 1;
+    const segmentSize = piecesPerLeg + 1;
+    const segment = Math.floor(i / segmentSize);
+    const indexInSegment = i % segmentSize;
 
-    const visualRow = direction === 1 ? row : piecesPerColumn - 1 - row;
+    const goingDown = segment % 2 === 0;
+    const baseX = segment * colStep;
 
-    positions.push({
-      x: col * colGap,
-      y: visualRow * rowGap,
-      isVertical: !isTurnPiece,
-      reversed: direction === -1,
-    });
+    // Primeira peça de cada coluna é a curva horizontal
+    if (indexInSegment === 0) {
+      positions.push({
+        x: baseX,
+        y: goingDown ? 0 : piecesPerLeg * rowStep,
+        isVertical: false,
+        reversed: !goingDown,
+      });
+    } else {
+      const row = indexInSegment - 1;
+      const visualRow = goingDown ? row : piecesPerLeg - 1 - row;
 
-    row++;
-
-    if (row >= piecesPerColumn) {
-      row = 0;
-      col++;
-      direction *= -1;
+      positions.push({
+        x: baseX + horizontalW - verticalW,
+        y: horizontalH + visualRow * rowStep,
+        isVertical: true,
+        reversed: !goingDown,
+      });
     }
   }
 
-  const totalColumns = Math.ceil(count / piecesPerColumn);
-
-  const layoutW = totalColumns * colGap + horizontalW;
-  const layoutH = piecesPerColumn * rowGap + verticalH;
+  const totalSegments = Math.ceil(count / (piecesPerLeg + 1));
+  const layoutW = totalSegments * colStep + horizontalW;
+  const layoutH = piecesPerLeg * rowStep + verticalH;
 
   return { positions, layoutW, layoutH };
 }
